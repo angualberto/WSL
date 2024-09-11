@@ -9,6 +9,7 @@ env:
 
 jobs:
   publish:
+    if: github.event.release.prerelease == false
     runs-on: windows-latest # Action can only run on Windows
     steps:
       - name: Publish WSL
