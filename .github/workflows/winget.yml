@@ -4,9 +4,6 @@ on:
   release:
     types: [published]
 
-env:
-  REGEX: 'wsl\.([\d.]+)\.x64\.msi$'
-
 jobs:
   publish:
     if: github.event.release.prerelease == false
@@ -14,11 +11,15 @@ jobs:
     steps:
       - name: Publish WSL
         run: |
+
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = "Stop"
+
           $assets = '${{ toJSON(github.event.release.assets) }}' | ConvertFrom-Json
           $wingetRelevantAssetx64 = $assets | Where-Object { $_.name -like '*x64.msi' } | Select-Object -First 1
           $wingetRelevantAssetARM64 = $assets | Where-Object { $_.name -like '*arm64.msi' } | Select-Object -First 1
-          $regex = [Regex]::New($env:REGEX)
-          $version = $regex.Match($wingetRelevantAssetx64.name).Groups[1].Value
+          
+          $version = "${{ github.event.release.tag_name }}"
 
           $wingetx64URL = $wingetRelevantAssetx64.browser_download_url
           $wingetARM64URL = $wingetRelevantAssetARM64.browser_download_url
