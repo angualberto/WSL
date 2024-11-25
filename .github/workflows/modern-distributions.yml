@@ -1,8 +1,11 @@
-name: Validate distributions
+name: Validate tar based distributions
 
 on:
   pull_request:
     paths: ['distributions/**']
+
+permissions:
+  pull-requests: write
 
 jobs:
   check:
@@ -20,5 +23,12 @@ jobs:
           shell: bash
 
         - name: Run validation
-          run: python distributions/validate-modern.py --repo-path . --compare-with-branch 'origin/${{ github.base_ref }}' --manifest distributions/DistributionInfo.json
+          run: | 
+            python distributions/validate-modern.py \
+            --repo-path . \
+            --compare-with-branch 'origin/${{ github.base_ref }}' \
+            --manifest distributions/DistributionInfo.json \
+            --github-token '${{ secrets.GITHUB_TOKEN }}' \
+            --github-pr '${{ github.event.pull_request.number }}' \
+            --github-commit '${{ github.event.pull_request.merge_commit_sha }}'
           shell: bash

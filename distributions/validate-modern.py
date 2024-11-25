@@ -8,12 +8,15 @@ import configparser
 import magic
 import os.path
 import git
+import re
+from github import Github
+
 
 USR_LIB_WSL = '/usr/lib/wsl'
 
 MAGIC = magic.Magic()
-X64_ELF_MAGIC = 'ELF 64-bit LSB shared object, x86-64, version 1 (SYSV)'
-ARM64_ELF_MAGIC = 'ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV)'
+X64_ELF_MAGIC = re.compile('^ELF 64-bit.* x86-64, version 1')
+ARM64_ELF_MAGIC = re.compile('^ELF 64-bit.* ARM aarch64, version 1')
 
 DISCOURAGED_SYSTEM_UNITS = ['systemd-resolved.service',
                             'systemd-networkd.service',
@@ -25,6 +28,9 @@ DISCOURAGED_SYSTEM_UNITS = ['systemd-resolved.service',
                             'NetworkManager.service',
                             'networking.service']
 
+errors = []
+warnings = []
+
 
 @click.command()
 @click.option('--manifest', default=None)
@@ -32,8 +38,11 @@ DISCOURAGED_SYSTEM_UNITS = ['systemd-resolved.service',
 @click.option('--compare-with-branch')
 @click.option('--repo-path', '..')
 @click.option('--arm64', is_flag=True)
+@click.option('--github-token', default=None)
+@click.option('--github-pr', default=None, type=int)
+@click.option('--github-commit', default=None)
 @click.option('--debug', is_flag=True)
-def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, debug: bool, arm64: bool):
+def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, arm64: bool, github_token: str, github_pr: str, github_commit: str, debug: bool):
     try:
         if tar is not None:
             with open(tar, 'rb') as fd:
@@ -43,7 +52,7 @@ def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, debu
                 raise RuntimeError('Either --tar or --manifest is required')
 
             with open(manifest) as fd:
-                manifest = json.loads(fd.read())
+                manifest_content = json.loads(fd.read())
 
             baseline_manifest = None
             if compare_with_branch is not None:
@@ -51,7 +60,7 @@ def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, debu
                 baseline_json = repo.commit(compare_with_branch).tree / 'distributions/DistributionInfo.json'
                 baseline_manifest = json.load(baseline_json.data_stream).get('ModernDistributions', {})
 
-            for flavor, versions in manifest["ModernDistributions"].items():
+            for flavor, versions in manifest_content["ModernDistributions"].items():
                 baseline_flavor = baseline_manifest.get(flavor, None) if baseline_manifest else None
 
                 for e in versions:
@@ -100,6 +109,12 @@ def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, debu
                 default_entries = sum(1 for e in versions if e.get('Default', False))
                 if default_entries != 1:
                     error(flavor, None, 'Found no default distribution' if default_entries == 0 else 'Found multiple default distributions')
+
+        if github_pr is not None:
+            assert github_token is not None and github_commit is not None and manifest is not None
+
+            report_status_on_pr(github_pr, github_token, github_commit, manifest)
+
     except:
         if debug:
             import traceback
@@ -108,6 +123,32 @@ def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, debu
             pdb.post_mortem()
         else:
             raise
+
+def report_status_on_pr(pr: int, github_token: str, github_commit: str, manifest: str):
+    github = Github(github_token)
+    repo = github.get_repo('microsoft/WSL')
+
+    def format_list(entries: list) -> str:
+        output = '\n'
+
+        for e in entries:
+            output += f'\n* {e}'
+
+        return output + '\n'
+
+    body = 'Thank you for your contribution to WSL.\n'
+    if errors:
+        body += f'**The following fatal errors have been found in this pull request:** {format_list(errors)}\n'
+    else:
+        body += 'No fatal errors have been found.\n'
+
+    if warnings:
+        body += f'**The following suggestions have been found in this pull request:** {format_list(warnings)}\n'
+    else:
+        body += 'No suggestions have been found.\n'
+
+    repo.get_pull(pr).create_review(body=body, commit=repo.get_commit(github_commit))
+
 
 def read_config_keys(config: configparser.ConfigParser) -> dict:
     keys = {}
@@ -246,7 +287,7 @@ def read_tar(flavor: str, name: str, file, elf_magic: str):
                     content.seek(0)
                     buffer = content.read(256)
                     file_magic = MAGIC.from_buffer(buffer)
-                    if file_magic != magic:
+                    if not magic.match(file_magic):
                         error(flavor, name, f'file: "{path}" has unexpected magic type: {file_magic} (expected: {magic})')
 
             return True
@@ -360,10 +401,19 @@ def read_url(flavor: str, name: str, url: dict, elf_magic):
 
 
 def error(flavor: str, distribution: str, message: str):
-    click.secho(f'Error in: {flavor}, distribution: {distribution}: {message}', fg='red')
+    global errors
+
+    message = f'{flavor}/{distribution}: {message}'
+    click.secho(f'Error: {message}', fg='red')
+
+    errors.append(message)
 
 def warning(flavor: str, distribution: str, message: str):
-    click.secho(f'Warning in: {flavor}, distribution: {distribution}: {message}', fg='yellow')
+    global warnings
 
+    message = f'{flavor}/{distribution}: {message}'
+    click.secho(f'Warning: {message}', fg='red')
+
+    warnings.append(message)
 if __name__ == "__main__":
     main()
