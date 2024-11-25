@@ -140,12 +140,12 @@ def report_status_on_pr(pr: int, github_token: str, github_commit: str, manifest
     if errors:
         body += f'**The following fatal errors have been found in this pull request:** {format_list(errors)}\n'
     else:
-        body += 'No fatal errors have been found\n'
+        body += 'No fatal errors have been found.\n'
 
     if warnings:
         body += f'**The following suggestions have been found in this pull request:** {format_list(warnings)}\n'
     else:
-        body += 'No suggestions have been found\n'
+        body += 'No suggestions have been found.\n'
 
     repo.get_pull(pr).create_review(body=body, commit=repo.get_commit(github_commit))
 
