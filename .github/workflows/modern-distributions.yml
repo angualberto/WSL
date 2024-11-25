@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
         - name: Checkout repo
+          fetch-depth: 0
           uses: actions/checkout@v4
 
         - name: Install pip packages
@@ -17,5 +18,5 @@ jobs:
           shell: bash
 
         - name: Run validation
-          run: python distributions/validate-modern.py --repo-path . --compare-with-branch '${{ github.base_ref }}' --manifest distributions/DistributionInfo.json
+          run: python distributions/validate-modern.py --repo-path . --compare-with-branch 'origin/${{ github.base_ref }}' --manifest distributions/DistributionInfo.json
           shell: bash
