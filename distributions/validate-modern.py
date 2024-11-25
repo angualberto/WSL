@@ -75,9 +75,8 @@ def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, debu
                     if 'FriendlyName' not in e:
                         error(flavor, name, 'Manifest entry is missing a "FriendlyName" entry')
 
-                    if name.startswith(flavor):
-                        error(flavor, name, 'Name should start with "{flavor}"')
-
+                    if not name.startswith(flavor):
+                        error(flavor, name, f'Name should start with "{flavor}"')
 
                     url_found = False
 
@@ -194,7 +193,7 @@ def read_systemd_enabled_units(flavor: str, name: str, tar) -> dict:
     return units
 
 def read_tar(flavor: str, name: str, file, elf_magic: str):
-    with tarfile.TarFile(fileobj=file) as tar:
+    with tarfile.open(fileobj=file) as tar:
 
         def validate_mode(path: str, mode, uid, gid, max_size = None, optional = False, follow_symlink = False, magic = None, parse_method = None):
             try:
@@ -319,8 +318,9 @@ def read_tar(flavor: str, name: str, file, elf_magic: str):
                 warning(flavor, name, f'Found discouraged system unit: {path}')
 
 def read_url(flavor: str, name: str, url: dict, elf_magic):
+     hash = hashlib.sha256()
+
      if url['Url'].startswith('file://'):
-         hash = hashlib.sha256()
          with open(url['Url'].replace('file:///', '').replace('file://', ''), 'rb') as fd:
             while True:
                 e = fd.read(4096 * 4096 * 10)
