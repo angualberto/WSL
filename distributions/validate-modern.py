@@ -39,7 +39,7 @@ warnings = []
 @click.option('--repo-path', '..')
 @click.option('--arm64', is_flag=True)
 @click.option('--github-token', default=None)
-@click.option('--github-pr', default=None)
+@click.option('--github-pr', default=None, type=int)
 @click.option('--github-commit', default=None)
 @click.option('--debug', is_flag=True)
 def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, arm64: bool, github_token: str, github_pr: str, github_commit: str, debug: bool):
