@@ -4,6 +4,9 @@ on:
   pull_request:
     paths: ['distributions/**']
 
+permissions:
+  pull-requests: write
+
 jobs:
   check:
     name: Validate tar based distributions changes

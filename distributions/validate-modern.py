@@ -124,7 +124,7 @@ def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, arm6
         else:
             raise
 
-def report_status_on_pr(pr: str, github_token: str, github_commit: str, manifest: str):
+def report_status_on_pr(pr: int, github_token: str, github_commit: str, manifest: str):
     github = Github(github_token)
     repo = github.get_repo('microsoft/WSL')
 
