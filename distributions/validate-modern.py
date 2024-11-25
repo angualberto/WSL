@@ -147,7 +147,7 @@ def report_status_on_pr(pr: int, github_token: str, github_commit: str, manifest
     else:
         body += 'No suggestions have been found\n'
 
-    repo.get_pull(pr).create_review_comment(body=body, commit=repo.get_commit(github_commit), path=manifest)
+    repo.get_pull(pr).create_review(body=body, commit=repo.get_commit(github_commit))
 
 
 def read_config_keys(config: configparser.ConfigParser) -> dict:
