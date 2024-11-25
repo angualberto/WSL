@@ -8,6 +8,10 @@
                 "Amd64Url": {
                     "Url": "https://github.com/OneBlue/wsl-test-distros/raw/refs/heads/master/debian-oobe.tar",
                     "Sha256": "0x954a116e05288281f3af5d01341df35b11235d063978e391199791b109641052"
+                },
+                "Arm64Url": {
+                    "Url": "https://github.com/OneBlue/wsl-test-distros/raw/refs/heads/master/ubuntu.tar.wsl",
+                    "Sha256": "0x3ebc5a5c0b60de0b86ed7a3f92791be7576668eba816e68bdca548db35e69495"
                 }
             }
         ]
