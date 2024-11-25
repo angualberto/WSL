@@ -13,6 +13,7 @@ USR_LIB_WSL = '/usr/lib/wsl'
 
 MAGIC = magic.Magic()
 X64_ELF_MAGIC = 'ELF 64-bit LSB shared object, x86-64, version 1 (SYSV)'
+ARM64_ELF_MAGIC = 'ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV)'
 
 DISCOURAGED_SYSTEM_UNITS = ['systemd-resolved.service',
                             'systemd-networkd.service',
@@ -30,12 +31,13 @@ DISCOURAGED_SYSTEM_UNITS = ['systemd-resolved.service',
 @click.option('--tar', default=None)
 @click.option('--compare-with-branch')
 @click.option('--repo-path', '..')
+@click.option('--arm64', is_flag=True)
 @click.option('--debug', is_flag=True)
-def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, debug: bool):
+def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, debug: bool, arm64: bool):
     try:
         if tar is not None:
             with open(tar, 'rb') as fd:
-                read_tar(tar, '<none>', fd, X64_ELF_MAGIC)
+                read_tar(tar, '<none>', fd, ARM64_ELF_MAGIC if arm64 else  X64_ELF_MAGIC)
         else:
             if manifest is None:
                 raise RuntimeError('Either --tar or --manifest is required')
@@ -84,7 +86,7 @@ def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, debu
                        url_found = True
 
                     if 'Arm64Url' in e:
-                       read_url(flavor, name, e['Arm64Url'], ARM_64_ELF_MAGIC)
+                       read_url(flavor, name, e['Arm64Url'], ARM64_ELF_MAGIC)
                        url_found = True
 
                     if not url_found:
@@ -208,7 +210,7 @@ def read_tar(flavor: str, name: str, file, elf_magic: str):
                         try:
                             parent_info = tar.getmember(parent_path)
                             if parent_info.issym():
-                                return validate_mode(f'/{parent_info.linkpath}/{os.path.basename(path)}', mode, uid, gid, max_size, optional, magic)
+                                return validate_mode(f'/{parent_info.linkpath}/{os.path.basename(path)}', mode, uid, gid, max_size, optional, True, magic)
                         except KeyError:
                             pass
 
