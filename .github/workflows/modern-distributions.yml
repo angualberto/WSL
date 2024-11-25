@@ -10,8 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
         - name: Checkout repo
-          fetch-depth: 0
           uses: actions/checkout@v4
+          with:           
+            fetch-depth: 0
+
 
         - name: Install pip packages
           run: pip install -r distributions/requirements.txt
