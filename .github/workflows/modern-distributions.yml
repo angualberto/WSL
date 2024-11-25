@@ -6,7 +6,7 @@ on:
 
 jobs:
   check:
-    name: Validate distributions
+    name: Validate tar based distributions changes
     runs-on: ubuntu-latest
     steps:
         - name: Checkout repo
