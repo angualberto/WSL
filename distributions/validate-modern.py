@@ -9,6 +9,8 @@ import magic
 import os.path
 import git
 import re
+from github import Github
+
 
 USR_LIB_WSL = '/usr/lib/wsl'
 
@@ -26,6 +28,9 @@ DISCOURAGED_SYSTEM_UNITS = ['systemd-resolved.service',
                             'NetworkManager.service',
                             'networking.service']
 
+errors = []
+warnings = []
+
 
 @click.command()
 @click.option('--manifest', default=None)
@@ -33,8 +38,11 @@ DISCOURAGED_SYSTEM_UNITS = ['systemd-resolved.service',
 @click.option('--compare-with-branch')
 @click.option('--repo-path', '..')
 @click.option('--arm64', is_flag=True)
+@click.option('--github-token', default=None)
+@click.option('--github-pr', default=None)
+@click.option('--github-commit', default=None)
 @click.option('--debug', is_flag=True)
-def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, debug: bool, arm64: bool):
+def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, arm64: bool, github_token: str, github_pr: str, github_commit: str, debug: bool):
     try:
         if tar is not None:
             with open(tar, 'rb') as fd:
@@ -101,6 +109,12 @@ def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, debu
                 default_entries = sum(1 for e in versions if e.get('Default', False))
                 if default_entries != 1:
                     error(flavor, None, 'Found no default distribution' if default_entries == 0 else 'Found multiple default distributions')
+
+        if github_pr is not None:
+            assert github_token is not None and github_commit is not None and manifest is not None
+
+            report_status_on_pr(github_pr, github_token, github_commit, manifest)
+
     except:
         if debug:
             import traceback
@@ -109,6 +123,32 @@ def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, debu
             pdb.post_mortem()
         else:
             raise
+
+def report_status_on_pr(pr: str, github_token: str, github_commit: str, manifest: str):
+    github = Github(github_token)
+    repo = github.get_repo('microsoft/WSL')
+
+    def format_list(entries: list) -> str:
+        output = '\n'
+
+        for e in entries:
+            output += f'\n* {e}'
+
+        return output + '\n'
+
+    body = 'Thank you for your contribution to WSL.\n'
+    if errors:
+        body += f'**The following fatal errors have been found in this pull request:** {format_list(errors)}\n'
+    else:
+        body += 'No fatal errors have been found\n'
+
+    if warnings:
+        body += f'**The following suggestions have been found in this pull request:** {format_list(warnings)}\n'
+    else:
+        body += 'No suggestions have been found\n'
+
+    repo.get_pull(pr).create_review_comment(body=body, commit=github_commit, path=manifest)
+
 
 def read_config_keys(config: configparser.ConfigParser) -> dict:
     keys = {}
@@ -361,10 +401,19 @@ def read_url(flavor: str, name: str, url: dict, elf_magic):
 
 
 def error(flavor: str, distribution: str, message: str):
-    click.secho(f'Error in: {flavor}, distribution: {distribution}: {message}', fg='red')
+    global errors
+
+    message = f'{flavor}/{distribution}: {message}'
+    click.secho(f'Error: {message}', fg='red')
+
+    errors.append(message)
 
 def warning(flavor: str, distribution: str, message: str):
-    click.secho(f'Warning in: {flavor}, distribution: {distribution}: {message}', fg='yellow')
+    global warnings
 
+    message = f'{flavor}/{distribution}: {message}'
+    click.secho(f'Warning: {message}', fg='red')
+
+    warnings.append(message)
 if __name__ == "__main__":
     main()
