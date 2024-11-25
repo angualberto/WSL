@@ -1,5 +1,17 @@
 {
-    "ModernDistributions": {},
+    "ModernDistributions": {
+         "test": [
+            {
+                "Name": "test-v1",
+                "FriendlyName": "test",
+                "Default": true,
+                "Amd64Url": {
+                    "Url": "https://github.com/OneBlue/wsl-test-distros/raw/refs/heads/master/debian-oobe.tar",
+                    "Sha256": "0x954a116e05288281f3af5d01341df35b11235d063978e391199791b109641052"
+                }
+            }
+        ]
+    },
     "Distributions": [
         {
             "Name": "Ubuntu",
