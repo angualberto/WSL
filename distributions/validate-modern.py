@@ -8,12 +8,13 @@ import configparser
 import magic
 import os.path
 import git
+import re
 
 USR_LIB_WSL = '/usr/lib/wsl'
 
 MAGIC = magic.Magic()
-X64_ELF_MAGIC = 'ELF 64-bit LSB shared object, x86-64, version 1 (SYSV)'
-ARM64_ELF_MAGIC = 'ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV)'
+X64_ELF_MAGIC = re.compile('^ELF 64-bit.* x86-64, version 1')
+ARM64_ELF_MAGIC = re.compile('^ELF 64-bit.* ARM aarch64, version 1')
 
 DISCOURAGED_SYSTEM_UNITS = ['systemd-resolved.service',
                             'systemd-networkd.service',
@@ -246,7 +247,7 @@ def read_tar(flavor: str, name: str, file, elf_magic: str):
                     content.seek(0)
                     buffer = content.read(256)
                     file_magic = MAGIC.from_buffer(buffer)
-                    if file_magic != magic:
+                    if not magic.match(file_magic):
                         error(flavor, name, f'file: "{path}" has unexpected magic type: {file_magic} (expected: {magic})')
 
             return True

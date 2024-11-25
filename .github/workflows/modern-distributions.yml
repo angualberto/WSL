@@ -1,4 +1,4 @@
-name: Validate distributions
+name: Validate tar based distributions
 
 on:
   pull_request:
