@@ -52,7 +52,7 @@ def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, arm6
                 raise RuntimeError('Either --tar or --manifest is required')
 
             with open(manifest) as fd:
-                manifest = json.loads(fd.read())
+                manifest_content = json.loads(fd.read())
 
             baseline_manifest = None
             if compare_with_branch is not None:
@@ -60,7 +60,7 @@ def main(manifest: str, tar: str, compare_with_branch: str, repo_path: str, arm6
                 baseline_json = repo.commit(compare_with_branch).tree / 'distributions/DistributionInfo.json'
                 baseline_manifest = json.load(baseline_json.data_stream).get('ModernDistributions', {})
 
-            for flavor, versions in manifest["ModernDistributions"].items():
+            for flavor, versions in manifest_content["ModernDistributions"].items():
                 baseline_flavor = baseline_manifest.get(flavor, None) if baseline_manifest else None
 
                 for e in versions:
