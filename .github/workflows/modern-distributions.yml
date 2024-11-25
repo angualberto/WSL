@@ -17,5 +17,5 @@ jobs:
           shell: bash
 
         - name: Run validation
-          run: python distributions/validate.py --repo-path . --compare-with-branch '${{ github.base_ref }}' --manifest distributions/DistributionInfo.json
+          run: python distributions/validate-modern.py --repo-path . --compare-with-branch '${{ github.base_ref }}' --manifest distributions/DistributionInfo.json
           shell: bash
