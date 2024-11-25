@@ -1,0 +1,21 @@
+name: Validate distributions
+
+on:
+  pull_request:
+    paths: ['distributions/**']
+
+jobs:
+  check:
+    name: Validate distributions
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout repo
+          uses: actions/checkout@v4
+
+        - name: Install pip packages
+          run: pip install -r distributions/requirements.txt
+          shell: bash
+
+        - name: Run validation
+          run: python distributions/validate.py --repo-path . --compare-with-branch '${{ github.base_ref }}' --manifest distributions/DistributionInfo.json
+          shell: bash
