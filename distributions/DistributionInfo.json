@@ -140,6 +140,16 @@
             "Amd64PackageUrl": "https://publicwsldistros.blob.core.windows.net/wsldistrostorage/openSUSETumbleweed-241001_x64.Appx",
             "Arm64PackageUrl": "https://publicwsldistros.blob.core.windows.net/wsldistrostorage/openSUSETumbleweed-241001_ARM64.Appx",
             "PackageFamilyName": "46932SUSE.openSUSETumbleweed_022rs5jcyhyac"
+        },
+        {
+            "Name": "Fedora",
+            "FriendlyName": "Fedora Linux",
+            "StoreAppId": "9P9PZV5XQK3H",
+            "Amd64": true,
+            "Arm64": true,
+            "Amd64PackageUrl": "https://publicwsldistros.blob.core.windows.net/wsldistrostorage/Fedora-35-230801_x64.Appx",
+            "Arm64PackageUrl": "https://publicwsldistros.blob.core.windows.net/wsldistrostorage/Fedora-35-230801_ARM64.Appx",
+            "PackageFamilyName": "FedoraProject.Fedora_35_79rhkp1fndgsc"
         }
     ]
 }
